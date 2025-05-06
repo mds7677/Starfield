@@ -3,7 +3,7 @@ const multer = require('multer');
 const cors = require('cors');
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });x
+const upload = multer({ dest: 'uploads/' });
 
 app.use(cors());  // Разрешает CORS для всех источников
 
