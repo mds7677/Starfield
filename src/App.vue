@@ -1,57 +1,133 @@
 <template>
-    <MyButton/>
+  <Preloader/>
+  <MyButton />
 
-  <div style="display: flex;flex-direction: column">
-    <MyStars/>
-    <MyInput/>
-  </div>
-  <div class = "text">
-  <MyText
-  v-for="post in posts"
-  :key ="post.id"
-  :title = "post.title"
-  :head ="post.head"
-  ></MyText>
+  <div style="display: flex; flex-direction: column">
+    <MyStars />
+    <MyInput />
   </div>
 
+  <div class="conveyor-fade-wrapper">
+    <div class="fade-left"></div>
+    <div class="fade-right"></div>
 
-
-
+    <div class="conveyor" @mouseover="pause" @mouseleave="resume">
+      <div
+          class="conveyor-item"
+          v-for="post in constellations"
+          :key="post.id"
+      >
+        <MyText
+            :title="post.title"
+            :head="post.head"
+            :body="post.body"
+            :image="post.image"
+        />
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue';
 import MyStars from './components/Stars.vue';
 import MyInput from './components/Input.vue';
 import MyText from './components/Text.vue';
 import MyButton from './components/MenuButton.vue';
-import {ref} from "vue";
-const posts = ref([
-  { id: 1, head :"Gemini",title: 'Близнецы — зодиакальное созвездие, символизирует братьев Кастора и Поллукса. Наиболее яркие звёзды — Кастор и Поллукс.' },
-  { id: 2, head :"Andromeda",title: 'Андромеда — расположено в северном полушарии, известно галактикой Андромеды — ближайшей крупной к Млечному Пути.' },
-  { id: 3, head :"Orion",title: 'Орион — одно из самых узнаваемых созвездий, включает пояс Ориона. Содержит яркую звезду Бетельгейзе и туманность Ориона.' },
-  { id: 4, head:"Ursa Major",title:"Большая Медведица — одно из самых известных созвездий, содержит астеризм Большая Медведица (Ковш)."},
-  { id: 5, head:"Ursa Minor",title:"Малая Медведица — включает Полярную звезду, указывающую на север, также известна своим 'маленьким ковшом'."},
-  { id: 6, head:"Aquila",title:"Орел — включает яркую звезду Альтаир, часть Летнего треугольника. Названо в честь орла Зевса."},
-  { id: 7, head:"Cancer",title:"Рак — зодиакальное созвездие, менее яркое, но известно скоплением Улей (Пчелиный рой)."},
-  { id: 8, head:"Phoenix",title:"Феникс — южное созвездие, названо в честь мифической птицы, возрождающейся из пепла. Открыто в 16 веке."},
-  { id: 9, head:"Aquarius",title:"Водолей — зодиакальное созвездие, символизирует водоносца. Входит в зодиак и ассоциируется с потоком воды."},
-  { id:10, head: "Leo", title: "Лев — зодиакальное созвездие, символизирует льва из мифов. Содержит яркую звезду Регул и хорошо видно весной."}
-])
+import Preloader from "./components/Preloader.vue";
+
+const constellations = ref([]);
+const isPaused = ref(false);
+
+onMounted(async () => {
+  try {
+    const response = await fetch('constellations_extended.json');
+    const data = await response.json();
+    // Дублируем для бесконечной прокрутки
+    constellations.value = [...data, ...data];
+  } catch (error) {
+    console.error('Ошибка загрузки:', error);
+  }
+});
+
+const pause = () => {
+  isPaused.value = true;
+  const conveyor = document.querySelector('.conveyor');
+  conveyor.style.animationPlayState = 'paused';
+};
+
+const resume = () => {
+  isPaused.value = false;
+  const conveyor = document.querySelector('.conveyor');
+  conveyor.style.animationPlayState = 'running';
+};
 </script>
 
 <style>
-body{
-  display: flex;
-  flex-direction: column;
+body {
   background-color: black;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
-.text{
-  display: flex;
-  flex-direction: column;
-  flex-wrap: wrap;
-  height: 500px;
-  justify-content: space-between;
-  align-items: center;
+/* Пример: временная заглушка */
+.my-stars-placeholder,
+.my-input-placeholder {
+  min-height: 100px; /* или что подходит по макету */
 }
 
+/* Обёртка с градиентами */
+.conveyor-fade-wrapper {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  padding: 20px 0;
+  margin-top:10px;
+}
+
+.conveyor {
+  display: flex;
+  gap: 20px;
+  animation: scroll-left 200s linear infinite;
+  width: max-content;
+  padding: 0 40px;
+  margin-bottom: 250px;
+}
+
+.conveyor-item {
+  flex-shrink: 0;
+  width: 300px;
+}
+
+/* Градиентные края */
+.fade-left,
+.fade-right {
+  position: absolute;
+  top: 0;
+  width: 60px;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.fade-left {
+  left: 0;
+  background: linear-gradient(to right, black 0%, transparent 100%);
+}
+
+.fade-right {
+  right: 0;
+  background: linear-gradient(to left, black 0%, transparent 100%);
+}
+
+/* Анимация движения */
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
 </style>

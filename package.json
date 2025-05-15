@@ -16,6 +16,7 @@
     "@fortawesome/vue-fontawesome": "^3.0.8",
     "@tresjs/core": "^4.3.3",
     "flask-cors": "^0.0.1",
+    "svn": "^0.4.0",
     "three": "^0.176.0",
     "tree.js": "^1.4.1",
     "typescript": "^5.8.3",

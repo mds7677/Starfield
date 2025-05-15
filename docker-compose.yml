@@ -1,0 +1,26 @@
+networks:
+  dev:
+
+
+services:
+  nginx:
+    image: nginx:1.24.0
+    ports:
+      - "80:80"
+    volumes:
+      - './nginx.conf:/etc/nginx/nginx.conf'
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - dev
+  backend:
+    build:
+      context: ./server
+    networks:
+      - dev
+  frontend:
+    build:
+      context: ./src
+    networks:
+      - dev

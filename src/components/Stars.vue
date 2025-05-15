@@ -1,4 +1,3 @@
-
 <template>
   <div ref="sceneContainer" class="starfield"></div>
 </template>
@@ -6,9 +5,10 @@
 <script setup>
 import * as THREE from 'three'
 import { onMounted, ref } from 'vue'
-import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass.js";
-import {UnrealBloomPass} from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+
 const sceneContainer = ref(null)
 
 onMounted(() => {
@@ -16,7 +16,7 @@ onMounted(() => {
   const camera = new THREE.PerspectiveCamera(100, window.innerWidth / window.innerHeight, 0.1, 2000)
   camera.position.z = 15
 
-  const renderer = new THREE.WebGLRenderer({antialias: true})
+  const renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setSize(window.innerWidth, window.innerHeight);
   sceneContainer.value.appendChild(renderer.domElement)
 
@@ -50,76 +50,84 @@ onMounted(() => {
   const starGroup = new THREE.Group()
   starGroup.add(stars)
   scene.add(starGroup)
-  //bloom renderer
-  const renderScene = new RenderPass(scene, camera);
-  const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight),
-      1.4,
-      0,
-      0.85
-  );
-  bloomPass.threshold = 0;
-  bloomPass.strength = 2;
-  bloomPass.radius = 1.76;
-  const bloomComposer = new EffectComposer(renderer);
-  bloomComposer.setSize(window.innerWidth, window.innerHeight);
-  bloomComposer.renderToScreen = true;
-  bloomComposer.addPass(renderScene);
-  bloomComposer.addPass(bloomPass);
+
+  // ---------- BLOOM ------------
+  const renderScene = new RenderPass(scene, camera)
+  const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85)
+  bloomPass.threshold = 0
+  bloomPass.strength = 2.5
+  bloomPass.radius = 1.2
+
+  const bloomComposer = new EffectComposer(renderer)
+  bloomComposer.setSize(window.innerWidth, window.innerHeight)
+  bloomComposer.renderToScreen = true
+  bloomComposer.addPass(renderScene)
+  bloomComposer.addPass(bloomPass)
+
   // ---------- ЗЕМЛЯ ----------
   const textureLoader = new THREE.TextureLoader()
-  let earth = null;
+  let earth = null
   textureLoader.load('earth.jpg', (texture) => {
     const earthGeometry = new THREE.SphereGeometry(7.5, 64, 64)
-    const earthMaterial = new THREE.MeshStandardMaterial({map: texture})
-    earth = new THREE.Mesh(earthGeometry, earthMaterial)
-    scene.add(earth);
-  });
-  // ---------- SUN-----------------
-  let sun = null;
-  const sunGroup = new THREE.Group();
-  const sunTextureLoader = new THREE.TextureLoader()
-  sunTextureLoader.load('8k_sun.jpg', (suntexture) => {
-  const sunGeometry = new THREE.SphereGeometry(7, 64, 64)
-  const sunMaterial = new THREE.MeshStandardMaterial({map: suntexture });
-  sun = new THREE.Mesh(sunGeometry, sunMaterial);
-  sun.position.set(0,30,-200);
-  sunGroup.add(sun);
-  scene.add(sunGroup);
-  });
-  // ---------- ОСВЕЩЕНИЕ ----------
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.3)
-  scene.add(ambientLight)
+    const earthMaterial = new THREE.MeshStandardMaterial({
+      map: texture,
+    })
 
-  const pointLight = new THREE.PointLight(0xfff4c2, 2, 300)
-  pointLight.position.set(0, 0, -70)
-  scene.add(pointLight)
+    earth = new THREE.Mesh(earthGeometry, earthMaterial)
+    earth.position.set(0, 0, 0)
+    scene.add(earth)
+  })
+
+  // ---------- СОЛНЦЕ ----------
+  const sunGroup = new THREE.Group()
+  let sun = null
+  let light = null
+  //let orbitAngle = 0
+  textureLoader.load('8k_sun.jpg', (sunTexture) => {
+    const sunGeometry = new THREE.SphereGeometry(4, 64, 64)
+    const sunMaterial = new THREE.MeshStandardMaterial({
+      map: sunTexture,
+      emissive: 0xffff33,
+      emissiveIntensity: 2,
+      metalness: 0.3,
+      roughness: 2
+    })
+
+    sun = new THREE.Mesh(sunGeometry, sunMaterial)
+    light = new THREE.PointLight(0xffee88, 3, 300)
+    light.position.set(0, 0, 0)
+    sun.add(light)
+    sun.position.set(0, 30, -200)
+    sunGroup.add(sun)
+    scene.add(sunGroup)
+  })
+
+  // ---------- ОБЩИЙ СВЕТ ----------
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4)
+  scene.add(ambientLight)
 
   // ---------- АНИМАЦИЯ ----------
   const animate = () => {
     requestAnimationFrame(animate)
-    starGroup.rotation.y += 0.0008;
-    sunGroup.rotation.y += 0.00085;
-    if (earth) {
-      earth.rotation.y += 0.001;
-    }
-    renderer.render(scene,camera);
-    bloomComposer.render(earth);
+
+    starGroup.rotation.y += 0.0008
+    if (earth) earth.rotation.y += 0.001
+    sunGroup.rotation.y += 0.0008;
+    bloomComposer.render(earth)
   }
 
-  animate();
+  animate()
 
   // ---------- ОБРАБОТКА РАЗМЕРА ОКНА ----------
   window.addEventListener('resize', () => {
     const width = window.innerWidth
     const height = window.innerHeight
-
     camera.aspect = width / height
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    bloomComposer.setSize(window.innerWidth, window.innerHeight);
-  });
-});
+    camera.updateProjectionMatrix()
+    renderer.setSize(width, height)
+    bloomComposer.setSize(width, height)
+  })
+})
 </script>
 
 <style scoped>
@@ -127,8 +135,6 @@ onMounted(() => {
   width: 100vw;
   height: 520px;
   position: relative;
-  top: 0;
-  left: 0;
   overflow: hidden;
   background-color: black;
 }
