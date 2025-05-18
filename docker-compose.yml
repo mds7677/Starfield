@@ -1,26 +1,35 @@
-networks:
-  dev:
-
+version: '3.8'
 
 services:
+  backend:
+    build:
+      context: './server'
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - './uploads:/app/uploads'
+      - './server:/app' # монтируем исходники сервера
+
+  frontend:
+    build:
+      context: .
+      dockerfile: src/Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - '.:/app'               # монтируем src в контейнер
+      - '/app/node_modules'        # игнорируем node_modules внутри
+    working_dir: /app
+    command: npm run dev          # включаем Vite в watch-режиме
+
   nginx:
     image: nginx:1.24.0
     ports:
-      - "80:80"
-    volumes:
-      - './nginx.conf:/etc/nginx/nginx.conf'
+      - "8080:80"
     depends_on:
-      - backend
       - frontend
-    networks:
-      - dev
-  backend:
-    build:
-      context: ./server
-    networks:
-      - dev
-  frontend:
-    build:
-      context: ./src
-    networks:
-      - dev
+      - backend
+    volumes:
+      - './src/dist:/usr/share/nginx/html'
+      - './nginx.conf:/etc/nginx/nginx.conf'

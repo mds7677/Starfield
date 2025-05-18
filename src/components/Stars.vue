@@ -18,9 +18,10 @@ onMounted(() => {
 
   const renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 1)
   sceneContainer.value.appendChild(renderer.domElement)
 
-  // ---------- ЗВЕЗДЫ ----------
+  // ЗВЕЗДЫ
   const starCount = 1500
   const starGeometry = new THREE.BufferGeometry()
   const starPositions = []
@@ -43,7 +44,8 @@ onMounted(() => {
     color: 0xffffff,
     size: 0.7,
     sizeAttenuation: true,
-    transparent: true
+    transparent: true,
+    opacity: 0.8
   })
 
   const stars = new THREE.Points(starGeometry, starMaterial)
@@ -51,12 +53,12 @@ onMounted(() => {
   starGroup.add(stars)
   scene.add(starGroup)
 
-  // ---------- BLOOM ------------
+  // BLOOM
   const renderScene = new RenderPass(scene, camera)
-  const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85)
-  bloomPass.threshold = 0
-  bloomPass.strength = 2.5
-  bloomPass.radius = 1.2
+  const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.3, 0.6, 0.15)
+  bloomPass.threshold = 0.08
+  bloomPass.strength = 1.4
+  bloomPass.radius = 0.8
 
   const bloomComposer = new EffectComposer(renderer)
   bloomComposer.setSize(window.innerWidth, window.innerHeight)
@@ -64,37 +66,83 @@ onMounted(() => {
   bloomComposer.addPass(renderScene)
   bloomComposer.addPass(bloomPass)
 
-  // ---------- ЗЕМЛЯ ----------
-  const textureLoader = new THREE.TextureLoader()
-  let earth = null
-  textureLoader.load('earth.jpg', (texture) => {
-    const earthGeometry = new THREE.SphereGeometry(7.5, 64, 64)
-    const earthMaterial = new THREE.MeshStandardMaterial({
-      map: texture,
-    })
+  // ЗЕМЛЯ
+  const earthGroup = new THREE.Group()
 
-    earth = new THREE.Mesh(earthGeometry, earthMaterial)
-    earth.position.set(0, 0, 0)
-    scene.add(earth)
+  const textureLoader = new THREE.TextureLoader()
+  const dayMap = textureLoader.load('8k_earth_daymap.jpg')
+  const nightMap = textureLoader.load('8k_earth_nightmap.jpg')
+  const normalMap = textureLoader.load('/8k_earth_normal_map.tif')
+  const specularMap = textureLoader.load('8k_earth_specular_map.tif')
+  const cloudMap = textureLoader.load('8k_earth_clouds.jpg')
+
+  const earthGeometry = new THREE.SphereGeometry(7.5, 64, 64)
+  const earthMaterial = new THREE.MeshStandardMaterial({
+    map: dayMap,
+    normalMap: normalMap,
+    normalScale: new THREE.Vector2(1.5, 1.5),
+    roughness: 0.6,
+    metalness: 0.2,
+    specularMap: specularMap,
+    emissive: 0x002244,
+    emissiveIntensity: 0.15,
+    envMapIntensity: 0.3,
   })
 
-  // ---------- СОЛНЦЕ ----------
+  const earth = new THREE.Mesh(earthGeometry, earthMaterial)
+  earthGroup.position.set(0, -1, 0)
+  earthGroup.add(earth)
+
+  // Облака
+  const cloudGeometry = new THREE.SphereGeometry(7.55, 64, 64)
+  const cloudMaterial = new THREE.MeshPhongMaterial({
+    map: cloudMap,
+    transparent: true,
+    opacity: 0.4,
+    depthWrite: false,
+    shininess: 25,
+  })
+  const clouds = new THREE.Mesh(cloudGeometry, cloudMaterial)
+  earthGroup.add(clouds)
+
+  // Ночная сторона
+  const nightMaterial = new THREE.MeshBasicMaterial({
+    map: nightMap,
+    blending: THREE.AdditiveBlending,
+    side: THREE.FrontSide,
+    transparent: true,
+    opacity: 0.55
+  })
+  const nightLayer = new THREE.Mesh(earthGeometry.clone(), nightMaterial)
+  earthGroup.add(nightLayer)
+
+  // Атмосфера
+  const atmosphereGeometry = new THREE.SphereGeometry(7.6, 64, 64)
+  const atmosphereMaterial = new THREE.MeshBasicMaterial({
+    color: 0x3399ff,
+    transparent: true,
+    opacity: 0.07,
+    side: THREE.BackSide
+  })
+  const atmosphere = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial)
+  earthGroup.add(atmosphere)
+
+  scene.add(earthGroup)
+
+  // СОЛНЦЕ
   const sunGroup = new THREE.Group()
-  let sun = null
-  let light = null
-  //let orbitAngle = 0
   textureLoader.load('8k_sun.jpg', (sunTexture) => {
     const sunGeometry = new THREE.SphereGeometry(4, 64, 64)
     const sunMaterial = new THREE.MeshStandardMaterial({
       map: sunTexture,
       emissive: 0xffff33,
-      emissiveIntensity: 2,
+      emissiveIntensity: 1.6,
       metalness: 0.3,
-      roughness: 2
+      roughness: 1.2,
     })
 
-    sun = new THREE.Mesh(sunGeometry, sunMaterial)
-    light = new THREE.PointLight(0xffee88, 3, 300)
+    const sun = new THREE.Mesh(sunGeometry, sunMaterial)
+    const light = new THREE.PointLight(0xffee88, 2.0, 300)
     light.position.set(0, 0, 0)
     sun.add(light)
     sun.position.set(0, 30, -200)
@@ -102,23 +150,25 @@ onMounted(() => {
     scene.add(sunGroup)
   })
 
-  // ---------- ОБЩИЙ СВЕТ ----------
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4)
+  // ОБЩИЙ СВЕТ
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
   scene.add(ambientLight)
 
-  // ---------- АНИМАЦИЯ ----------
+  // АНИМАЦИЯ
   const animate = () => {
     requestAnimationFrame(animate)
 
     starGroup.rotation.y += 0.0008
-    if (earth) earth.rotation.y += 0.001
-    sunGroup.rotation.y += 0.0008;
-    bloomComposer.render(earth)
+    earth.rotation.y += 0.001
+    clouds.rotation.y += 0.0012
+    nightLayer.rotation.y += 0.001
+    sunGroup.rotation.y += 0.0008
+    bloomComposer.render()
   }
 
   animate()
 
-  // ---------- ОБРАБОТКА РАЗМЕРА ОКНА ----------
+  // РЕЗАЙЗ
   window.addEventListener('resize', () => {
     const width = window.innerWidth
     const height = window.innerHeight

@@ -1,8 +1,8 @@
 <template>
+  <Header/>
   <Preloader/>
-  <MyButton />
 
-  <div style="display: flex; flex-direction: column">
+  <div style="display: flex; flex-direction: column;width: 100vw">
     <MyStars />
     <MyInput />
   </div>
@@ -11,7 +11,7 @@
     <div class="fade-left"></div>
     <div class="fade-right"></div>
 
-    <div class="conveyor" @mouseover="pause" @mouseleave="resume">
+<!--    <div class="conveyor" @mouseover="pause" @mouseleave="resume">
       <div
           class="conveyor-item"
           v-for="post in constellations"
@@ -24,7 +24,7 @@
             :image="post.image"
         />
       </div>
-    </div>
+    </div>-->
   </div>
 </template>
 
@@ -35,6 +35,7 @@ import MyInput from './components/Input.vue';
 import MyText from './components/Text.vue';
 import MyButton from './components/MenuButton.vue';
 import Preloader from "./components/Preloader.vue";
+import Header from "./components/Header.vue";
 
 const constellations = ref([]);
 const isPaused = ref(false);

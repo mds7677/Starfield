@@ -1,8 +1,7 @@
-FROM ubuntu:latest
-LABEL authors="xxx64"
-FROM python:3.11.9-slim
+FROM python:3.10
 
-CMD["python3","server.py"]
-
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
 COPY . .
-ENTRYPOINT ["top", "-b"]
+CMD ["python3", "server.py"]

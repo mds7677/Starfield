@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def extract_coordinates(image_path):
@@ -43,8 +43,7 @@ def upload_file():
     }, 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
-
+    app.run(host='0.0.0.0', port=5000, debug=True)
 
 # https://github.com/Stellarium/stellarium/tree/master/skycultures/modern/illustrations
 
