@@ -2,29 +2,33 @@
   <Header/>
   <Preloader/>
 
-  <div style="display: flex; flex-direction: column;width: 100vw">
+  <div class="stars-input-wrapper">
     <MyStars />
     <MyInput />
   </div>
 
-  <div class="conveyor-fade-wrapper">
-    <div class="fade-left"></div>
-    <div class="fade-right"></div>
-
-<!--    <div class="conveyor" @mouseover="pause" @mouseleave="resume">
-      <div
-          class="conveyor-item"
-          v-for="post in constellations"
-          :key="post.id"
-      >
+  <div class="page-container">
+    <!-- Левая колонка с текстами -->
+    <div class="floating-texts left">
+      <transition-group name="fade-float" tag="div">
         <MyText
-            :title="post.title"
-            :head="post.head"
-            :body="post.body"
-            :image="post.image"
+            v-for="item in floatingLeft"
+            :key="item.id"
+            v-bind="item"
         />
-      </div>
-    </div>-->
+      </transition-group>
+    </div>
+
+    <!-- Правая колонка с текстами -->
+    <div class="floating-texts right">
+      <transition-group name="fade-float" tag="div">
+        <MyText
+            v-for="item in floatingRight"
+            :key="item.id"
+            v-bind="item"
+        />
+      </transition-group>
+    </div>
   </div>
 </template>
 
@@ -33,35 +37,48 @@ import { ref, onMounted } from 'vue';
 import MyStars from './components/Stars.vue';
 import MyInput from './components/Input.vue';
 import MyText from './components/Text.vue';
-import MyButton from './components/MenuButton.vue';
 import Preloader from "./components/Preloader.vue";
 import Header from "./components/Header.vue";
 
 const constellations = ref([]);
-const isPaused = ref(false);
+const floatingLeft = ref([]);
+const floatingRight = ref([]);
+
+function getRandomItem() {
+  const index = Math.floor(Math.random() * constellations.value.length);
+  return { ...constellations.value[index], id: Math.random().toString(36).substr(2, 9) };
+}
+
+function spawnFloatingBlock() {
+  const leftItem = getRandomItem();
+  const rightItem = getRandomItem();
+
+  if (floatingLeft.value.length < 3) {
+    floatingLeft.value.push(leftItem);
+    setTimeout(() => {
+      floatingLeft.value = floatingLeft.value.filter(i => i.id !== leftItem.id);
+    }, 8000);
+  }
+
+  if (floatingRight.value.length < 3) {
+    floatingRight.value.push(rightItem);
+    setTimeout(() => {
+      floatingRight.value = floatingRight.value.filter(i => i.id !== rightItem.id);
+    }, 8000);
+  }
+}
 
 onMounted(async () => {
   try {
     const response = await fetch('constellations_extended.json');
     const data = await response.json();
-    // Дублируем для бесконечной прокрутки
-    constellations.value = [...data, ...data];
+    constellations.value = data;
+
+    setInterval(spawnFloatingBlock, 3000);
   } catch (error) {
     console.error('Ошибка загрузки:', error);
   }
 });
-
-const pause = () => {
-  isPaused.value = true;
-  const conveyor = document.querySelector('.conveyor');
-  conveyor.style.animationPlayState = 'paused';
-};
-
-const resume = () => {
-  isPaused.value = false;
-  const conveyor = document.querySelector('.conveyor');
-  conveyor.style.animationPlayState = 'running';
-};
 </script>
 
 <style>
@@ -71,64 +88,79 @@ body {
   padding: 0;
   overflow-x: hidden;
 }
-/* Пример: временная заглушка */
-.my-stars-placeholder,
-.my-input-placeholder {
-  min-height: 100px; /* или что подходит по макету */
-}
 
-/* Обёртка с градиентами */
-.conveyor-fade-wrapper {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-  padding: 20px 0;
-  margin-top:10px;
-}
-
-.conveyor {
+/* Контейнер для звёзд и инпута вертикальный, немного поднимем MyInput */
+.stars-input-wrapper {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: 40px; /* Можно регулировать отступ сверху */
+}
+
+/* Поднимем MyInput чуть выше относительно MyStars */
+.stars-input-wrapper MyInput {
+  margin-top: -10px; /* Немного сдвигаем вверх */
+}
+
+/* Основной контейнер с двумя колонками */
+.page-container {
+  display: flex;
+  justify-content: space-between; /* Колонки по краям */
+  padding: 80px 40px;
+  min-height: 40vh;
+  gap: 20px; /* Отступ между колонками */
+}
+
+/* Колонки с текстами — убираем абсолютное позиционирование */
+.floating-texts {
+  position: relative; /* или можно вообще убрать */
+  display: flex;
+  flex-direction: column;
   gap: 20px;
-  animation: scroll-left 200s linear infinite;
-  width: max-content;
-  padding: 0 40px;
-  margin-bottom: 250px;
-}
-
-.conveyor-item {
-  flex-shrink: 0;
+  top: -650px;
   width: 300px;
+  pointer-events: auto;
 }
 
-/* Градиентные края */
-.fade-left,
-.fade-right {
-  position: absolute;
-  top: 0;
-  width: 60px;
-  height: 100%;
-  z-index: 2;
-  pointer-events: none;
+.floating-texts.left {
+  /* можно добавить дополнительные стили при необходимости */
 }
 
-.fade-left {
-  left: 0;
-  background: linear-gradient(to right, black 0%, transparent 100%);
+.floating-texts.right {
+  /* можно добавить дополнительные стили при необходимости */
 }
 
-.fade-right {
-  right: 0;
-  background: linear-gradient(to left, black 0%, transparent 100%);
+/* Анимация появления и исчезновения */
+.fade-float-enter-active,
+.fade-float-leave-active {
+  transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-/* Анимация движения */
-@keyframes scroll-left {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+/* Появление — снизу с прозрачностью */
+.fade-float-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* Исчезновение — уезжание в сторону + прозрачность */
+.fade-float-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* Для левой колонки уезжание влево */
+.floating-texts.left .fade-float-leave-to {
+  transform: translateX(-100%) translateY(10px);
+}
+
+/* Для правой колонки уезжание вправо */
+.floating-texts.right .fade-float-leave-to {
+  transform: translateX(100%) translateY(10px);
+}
+
+/* Плавное смещение элементов при изменении позиции */
+.fade-float-move {
+  transition: transform 0.6s ease;
 }
 </style>

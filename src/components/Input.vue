@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <label class="upload-label" for="fileInput">
+    <label class="upload-label" for="fileInput" v-if="Visible">
       <svg
           xmlns="http://www.w3.org/2000/svg"
           class="icon-upload"
@@ -29,6 +29,8 @@
         v-if="ShowCanvas"
         :imageSrc="imageSrc"
         :points="points"
+        :image="Constellationsimage"
+        :name = "constellationname"
     />
   </div>
 </template>
@@ -43,6 +45,9 @@ export default {
     return {
       ShowCanvas: false,
       imageSrc: null,
+      Visible: true,
+      Constellationsimage:null,
+      constellationname:null,
       points: [
         { x: 100, y: 100 },
         { x: 200, y: 150 },
@@ -57,6 +62,7 @@ export default {
       if (!file) return;
 
       this.ShowCanvas = true;
+      this.Visible = false;
 
       const reader = new FileReader();
       reader.onload = () => {
@@ -66,15 +72,15 @@ export default {
 
       const formData = new FormData();
       formData.append("file", file);
-
       try {
         const res = await fetch("http://localhost:5000/upload", {
           method: "POST",
           body: formData,
         });
-
         if (!res.ok) throw new Error("Ошибка запроса");
         const data = await res.json();
+        this.Constellationsimage.value=data.name
+        this.constellationname=data.name;
         console.log("Загружено:", data);
       } catch (e) {
         console.error("Ошибка загрузки:", e);

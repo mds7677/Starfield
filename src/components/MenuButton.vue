@@ -1,28 +1,34 @@
 <script setup>
-
+defineProps(['title'])
 </script>
 
 <template>
-  <div>
-  <button class="menu-button">
-    <font-awesome-icon icon="bars" />
+  <button class="custom-button">
+    {{ title }}
   </button>
-  </div>
 </template>
 
 <style scoped>
-.menu-button {
-  background: none;
-  border: none;
-  font-size: 32px;
-  padding: 6px 10px 6px 10px;
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&display=swap');
+
+.custom-button {
+  width: 220px;
+  height: 52px;
+  background-color: #0a0f1c;
+  border-radius: 12px;
+  border: 1px solid #4e5d78;
+  color: #ffffff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  text-transform: uppercase;
+  transition: background-color 0.3s, border-color 0.3s, transform 0.2s;
   cursor: pointer;
-  display:flex;
-  align-items: flex-start;
-  left: 10px;
 }
-.menu-button:hover {
-  background-color: #9AA6B2;
-  border-radius: 50%;
+
+.custom-button:hover {
+  background-color: #121c2f;
+  border-color: #6d88c1;
+  transform: scale(1.03);
 }
 </style>

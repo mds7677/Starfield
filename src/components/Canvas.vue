@@ -1,14 +1,40 @@
 <template>
-  <div ref="container" class="three-container"></div>
+  <div class="mainwindow">
+    <div class="content-row">
+      <!-- Левая часть: рендер неба -->
+      <div ref="container" class="three-container"></div>
+
+      <!-- Правая часть: боковая панель -->
+      <div class="sidebar">
+        <img :src="`/illustrations/${image}`" class="constellation-icon" />
+        <h2 class="constellation-title">{{name}}</h2>
+        <div class="button-group">
+          <Button title="Показать Маску" />
+          <Button title="Следующее созвездие" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Нижняя панель управления -->
+    <div class="bottom-controls">
+      <Button title="Загрузить другое" />
+      <Button title="Сменить тему" />
+      <Button title="Скачать" />
+    </div>
+  </div>
 </template>
+
 
 <script setup>
 import { onMounted, ref, watch } from 'vue';
 import * as THREE from 'three';
+import Button from './MenuButton.vue';
 
 const props = defineProps({
   imageSrc: String,
-  points: Array
+  points: Array,
+  image: String,
+  name: String,
 });
 
 const container = ref(null);
@@ -164,16 +190,69 @@ const animate = () => {
 </script>
 
 <style scoped>
+.mainwindow {
+  max-width: 1000px;
+  margin: 80px 20px 0 20px;
+  background: rgba(13, 17, 28, 0.8); /* полупрозрачный тёмный фон */
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); /* мягкая тень */
+  backdrop-filter: blur(12px); /* эффект стекла */
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.content-row {
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+}
+
 .three-container {
+  flex: 3;
   display: flex;
   justify-content: center;
-  align-self: center;
-  margin-top: 30px;
+  align-items: center;
+  background-color: black;
+  border-radius: 12px;
   overflow: hidden;
+  padding: 10px;
 }
-canvas {
-  display: block;
-  max-width: 100%;
-  height: auto;
+
+.sidebar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #0a0a0a;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.constellation-icon {
+  max-width: 220px;
+  margin-bottom: 20px;
+  height: 400px;
+}
+
+.constellation-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.bottom-controls {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 0;
 }
 </style>

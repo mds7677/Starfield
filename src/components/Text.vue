@@ -30,16 +30,12 @@ export default {
     const isMounted = ref(false);
 
     onMounted(() => {
-      // Запускаем анимацию появления при загрузке
       setTimeout(() => {
         isMounted.value = true;
       }, 100);
     });
 
-    return {
-      Visible,
-      isMounted
-    };
+    return { Visible, isMounted };
   }
 };
 </script>
@@ -51,8 +47,10 @@ export default {
   opacity: 0;
   text-align: left;
   margin: 0;
+  color: white;
   transform: translateY(30px);
   transition: opacity 0.8s ease, transform 0.8s ease;
+  overflow: hidden; /* чтобы не скакало */
 }
 
 .wrapper.mounted {
@@ -67,9 +65,8 @@ export default {
   gap: 6px;
 }
 
-/* body-text скрыта по умолчанию */
+/* body-text скрыта по умолчанию, но с плавным max-height */
 .body-text {
-  overflow: hidden;
   max-height: 0;
   opacity: 0;
   transition: max-height 0.6s ease, opacity 0.4s ease;
@@ -78,10 +75,11 @@ export default {
   padding-left: 22px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .body-text.visible {
-  max-height: 400px;
+  max-height: 400px; /* или чуть больше, чтобы весь текст влазил */
   opacity: 1;
 }
 
@@ -116,4 +114,3 @@ img {
   font-style: oblique;
 }
 </style>
-
