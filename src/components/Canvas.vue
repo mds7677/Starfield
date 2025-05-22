@@ -193,12 +193,14 @@ const animate = () => {
 .mainwindow {
   max-width: 1000px;
   margin: 80px 20px 0 20px;
-  background: rgba(13, 17, 28, 0.8); /* полупрозрачный тёмный фон */
+  background: #050911;
+  /*background: rgba(13, 17, 28, 0.8);*/ /* полупрозрачный тёмный фон */
   border-radius: 24px;
   padding: 30px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); /* мягкая тень */
   backdrop-filter: blur(12px); /* эффект стекла */
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  /*border: 1px solid rgba(255, 255, 255, 0.05);*/
+  border: 2px solid #131924;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -217,6 +219,7 @@ const animate = () => {
   align-items: center;
   background-color: black;
   border-radius: 12px;
+  border: 2px solid #131924;
   overflow: hidden;
   padding: 10px;
 }
@@ -226,21 +229,22 @@ const animate = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: #0a0a0a;
+  background-color: #080d16;
   border-radius: 12px;
+  border: 2px solid #131924;
   padding: 20px;
 }
 
 .constellation-icon {
   max-width: 220px;
   margin-bottom: 20px;
-  height: 400px;
+  height: 350px;
 }
 
 .constellation-title {
   font-size: 24px;
   font-weight: bold;
-  margin-bottom: 20px;
+  margin-top: 20px;
 }
 
 .button-group {

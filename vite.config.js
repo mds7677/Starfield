@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     host: '0.0.0.0',
-    allowedHosts:['lqnuwe-46-216-23-61.ru.tuna.am'],
+    allowedHosts:['x7mr5z-109-126-189-247.ru.tuna.am'],
     port: 5173,
     strictPort: true,
     watch: {

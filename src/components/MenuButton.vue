@@ -16,19 +16,18 @@ defineProps(['title'])
   height: 52px;
   background-color: #0a0f1c;
   border-radius: 12px;
-  border: 1px solid #4e5d78;
+  border: 1.5px solid #050911;
   color: #ffffff;
   font-family: 'Orbitron', sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
-  text-transform: uppercase;
   transition: background-color 0.3s, border-color 0.3s, transform 0.2s;
   cursor: pointer;
 }
 
 .custom-button:hover {
-  background-color: #121c2f;
-  border-color: #6d88c1;
+  background-color:#0a0f1c;
+  border-color: #131924;
   transform: scale(1.03);
 }
 </style>

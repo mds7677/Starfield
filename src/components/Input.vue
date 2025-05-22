@@ -29,8 +29,8 @@
         v-if="ShowCanvas"
         :imageSrc="imageSrc"
         :points="points"
-        :image="Constellationsimage"
-        :name = "constellationname"
+        image='andromeda.png'
+        name = "Andromeda"
     />
   </div>
 </template>
