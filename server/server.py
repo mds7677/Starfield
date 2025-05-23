@@ -2,6 +2,7 @@ from flask import Flask, request, send_from_directory, jsonify
 from flask_cors import CORS
 import os
 import traceback
+from matcher import match
 
 app = Flask(__name__)
 CORS(app)
@@ -92,3 +93,11 @@ def download_file(filename):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
+
+
+# call this function whereever you want:
+#
+# name, lines = match(import_path, export_path)
+#
+# name - short constellation name, such as UMi, Cep, etc
+# lines - [[(x0, y0), (x1, y1)], [(x2, y2), (x3, y3)], ...]
