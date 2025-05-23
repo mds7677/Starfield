@@ -26,3 +26,7 @@ server/uploads
 server/node_modules
 *.jpg
 public/illustrations
+.vscode
+package.json
+package-lock.json
+constellations_extended.json
