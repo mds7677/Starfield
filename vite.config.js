@@ -4,12 +4,18 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   server: {
-    host: '0.0.0.0',
-    allowedHosts:['x7mr5z-109-126-189-247.ru.tuna.am'],
+    host: true,
     port: 5173,
     strictPort: true,
     watch: {
-      usePolling: true // необходимо для Docker volume
+      usePolling: true
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000/', // <-- замени на адрес и порт твоего backend сервера
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      }
     }
   },
   base: '/',

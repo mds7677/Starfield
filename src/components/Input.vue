@@ -29,14 +29,15 @@
         v-if="ShowCanvas"
         :imageSrc="imageSrc"
         :points="points"
-        image='andromeda.png'
-        name = "Andromeda"
+        image="andromeda.png"
+        name="Andromeda"
     />
   </div>
 </template>
 
 <script>
 import MyCanvas from "./Canvas.vue";
+
 export default {
   components: {
     MyCanvas,
@@ -46,8 +47,8 @@ export default {
       ShowCanvas: false,
       imageSrc: null,
       Visible: true,
-      Constellationsimage:null,
-      constellationname:null,
+      Constellationsimage: null,
+      constellationname: null,
       points: [
         { x: 100, y: 100 },
         { x: 200, y: 150 },
@@ -64,23 +65,35 @@ export default {
       this.ShowCanvas = true;
       this.Visible = false;
 
+      // Отображаем локально выбранное изображение
       const reader = new FileReader();
       reader.onload = () => {
         this.imageSrc = reader.result;
       };
       reader.readAsDataURL(file);
 
+      // Отправка файла на сервер
       const formData = new FormData();
       formData.append("file", file);
+
       try {
-        const res = await fetch("http://localhost:5000/upload", {
+        const res = await fetch("/api/upload", {
           method: "POST",
           body: formData,
         });
-        if (!res.ok) throw new Error("Ошибка запроса");
+
+        if (!res.ok) {
+          // При ошибке читаем текст ответа для подробностей
+          const errorText = await res.text();
+          console.error("Ошибка ответа от сервера:", res.status, errorText);
+          throw new Error(`Ошибка запроса: ${res.status}`);
+        }
+
         const data = await res.json();
-        this.Constellationsimage.value=data.name
-        this.constellationname=data.name;
+        // Используем поле filename, как у тебя возвращает сервер
+        this.Constellationsimage = data.filename || null;
+        this.constellationname = data.filename || null;
+
         console.log("Загружено:", data);
       } catch (e) {
         console.error("Ошибка загрузки:", e);
