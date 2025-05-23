@@ -8,7 +8,14 @@ CORS(app)
 
 # Папка для сохранения загруженных файлов
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "uploads")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Убедимся, что папка существует
+if not os.path.exists(UPLOAD_FOLDER):
+    try:
+        os.makedirs(UPLOAD_FOLDER)
+        print(f"Создана папка для загрузок: {UPLOAD_FOLDER}")
+    except Exception as e:
+        print(f"Ошибка при создании папки {UPLOAD_FOLDER}: {e}")
 
 # Разрешённые расширения файлов
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -34,9 +41,15 @@ def upload_file():
         if not allowed_file(file.filename):
             return jsonify({'error': 'File type not allowed'}), 400
 
+        # Проверяем доступность папки для записи
+        if not os.path.exists(UPLOAD_FOLDER):
+            return jsonify({'error': f'Upload folder {UPLOAD_FOLDER} does not exist'}), 500
+
+        if not os.access(UPLOAD_FOLDER, os.W_OK):
+            return jsonify({'error': f'Upload folder {UPLOAD_FOLDER} is not writable'}), 500
+
         filename = file.filename
         name, ext = os.path.splitext(filename)
-
         save_path = os.path.join(UPLOAD_FOLDER, filename)
 
         # Уникализация имени файла, если файл с таким именем уже есть
@@ -46,10 +59,17 @@ def upload_file():
             save_path = os.path.join(UPLOAD_FOLDER, filename)
             counter += 1
 
+        # Логируем права и путь перед сохранением
+        st = os.stat(UPLOAD_FOLDER)
+        print(f"Upload folder permissions: {oct(st.st_mode)[-3:]}, path: {UPLOAD_FOLDER}")
+
         file.save(save_path)
         print(f"File saved to: {save_path}")
 
-        # Получаем координаты (заглушка)
+        # Проверяем файл после сохранения
+        if not os.path.exists(save_path):
+            return jsonify({'error': 'Failed to save file'}), 500
+
         coordinates = extract_coordinates(save_path)
 
         return jsonify({
@@ -59,7 +79,6 @@ def upload_file():
         }), 200
 
     except Exception as e:
-        # Выводим трассировку ошибки в консоль для отладки
         traceback.print_exc()
         return jsonify({'error': f'Internal Server Error: {str(e)}'}), 500
 
@@ -72,5 +91,4 @@ def download_file(filename):
         return jsonify({'error': 'File not found'}), 404
 
 if __name__ == '__main__':
-    # Запускаем сервер на 0.0.0.0 и порту 5000 с отладкой
     app.run(host='0.0.0.0', port=5000, debug=True)

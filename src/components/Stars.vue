@@ -158,7 +158,7 @@ onMounted(() => {
   const animate = () => {
     requestAnimationFrame(animate)
 
-    starGroup.rotation.y += 0.0008
+    starGroup.rotation.y += 0.0004
     earth.rotation.y += 0.001
     clouds.rotation.y += 0.0012
     nightLayer.rotation.y += 0.001

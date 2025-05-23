@@ -144,7 +144,6 @@ export default {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url('./Stars/grain.png');
   opacity: 0.05;
   pointer-events: none;
   z-index: 1;
