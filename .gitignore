@@ -26,4 +26,3 @@ server/uploads
 server/node_modules
 *.jpg
 public/illustrations
-*.png
