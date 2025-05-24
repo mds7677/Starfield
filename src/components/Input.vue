@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <label class="upload-label" for="fileInput" v-if="Visible">
+    <label class="upload-label" for="fileInput" v-if="visible">
       <svg
           xmlns="http://www.w3.org/2000/svg"
           class="icon-upload"
@@ -26,35 +26,29 @@
     </label>
 
     <MyCanvas
-        v-if="ShowCanvas"
+        v-if="showCanvas"
         :imageSrc="imageSrc"
         :points="points"
-        image="andromeda.png"
-        name="Andromeda"
+        :image="constellationImage"
+        :name="constellationName"
+        @reload="handleReload"
     />
   </div>
 </template>
 
 <script>
-import MyCanvas from "./Canvas.vue";
+import MyCanvas from './Canvas.vue';
 
 export default {
-  components: {
-    MyCanvas,
-  },
+  components: { MyCanvas },
   data() {
     return {
-      ShowCanvas: false,
+      showCanvas: false,
       imageSrc: null,
-      Visible: true,
-      Constellationsimage: null,
-      constellationname: null,
-      points: [
-        { x: 100, y: 100 },
-        { x: 200, y: 150 },
-        { x: 300, y: 120 },
-        { x: 400, y: 200 },
-      ],
+      visible: true,
+      constellationImage: null,
+      constellationName: null,
+      points: [],
     };
   },
   methods: {
@@ -62,42 +56,47 @@ export default {
       const file = event.target.files[0];
       if (!file) return;
 
-      this.ShowCanvas = true;
-      this.Visible = false;
+      this.showCanvas = true;
+      this.visible = false;
 
-      // Отображаем локально выбранное изображение
       const reader = new FileReader();
       reader.onload = () => {
         this.imageSrc = reader.result;
       };
       reader.readAsDataURL(file);
 
-      // Отправка файла на сервер
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append('file', file);
 
       try {
-        const res = await fetch("/api/upload", {
-          method: "POST",
+        const res = await fetch('/api/upload', {
+          method: 'POST',
           body: formData,
         });
 
         if (!res.ok) {
-          // При ошибке читаем текст ответа для подробностей
           const errorText = await res.text();
-          console.error("Ошибка ответа от сервера:", res.status, errorText);
+          console.error('Ошибка ответа от сервера:', res.status, errorText);
           throw new Error(`Ошибка запроса: ${res.status}`);
         }
 
         const data = await res.json();
-        // Используем поле filename, как у тебя возвращает сервер
-        this.Constellationsimage = data.filename || null;
-        this.constellationname = data.filename || null;
+        this.constellationImage = data.filename || null;
+        this.constellationName = data.coordinates[0] || null;
 
-        console.log("Загружено:", data);
+        const linePairs = data.coordinates[1] || [];
+        this.points = linePairs.flat().map(([x, y]) => ({ x, y }));
+
       } catch (e) {
-        console.error("Ошибка загрузки:", e);
+        console.error('Ошибка загрузки:', e);
       }
+    },
+    handleReload() {
+      this.showCanvas = false;
+      this.visible = true;
+      this.imageSrc = null;
+      this.constellationImage = null;
+      this.constellationName = null;
     },
   },
 };

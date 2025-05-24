@@ -142,7 +142,7 @@ def match_stars_to_catalogue(df: pd.DataFrame, metrics: pd.DataFrame, tree: KDTr
     return matches
 
 
-def match(import_path: str, export_path: str) -> tuple[str, list[list]]:
+def match(import_path: str) -> tuple[str, list[list]]:
     dots = find_stars(import_path)
     df = pd.DataFrame(dots, columns=["x", "y"])
     matches = match_stars_to_catalogue(df, metrics, tree)

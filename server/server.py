@@ -24,9 +24,18 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def get_next_filename(extension):
+    counter = 1
+    while True:
+        filename = f"{counter}{extension}"
+        path = os.path.join(UPLOAD_FOLDER, filename)
+        if not os.path.exists(path):
+            return filename, path
+        counter += 1
+
 def extract_coordinates(image_path):
-    # Заглушка: здесь должна быть твоя логика анализа изображения
-    return [(500, 200), (250, 300), (500, 400)]
+    name, lines = match(image_path)
+    return name, lines
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
@@ -42,32 +51,22 @@ def upload_file():
         if not allowed_file(file.filename):
             return jsonify({'error': 'File type not allowed'}), 400
 
-        # Проверяем доступность папки для записи
         if not os.path.exists(UPLOAD_FOLDER):
             return jsonify({'error': f'Upload folder {UPLOAD_FOLDER} does not exist'}), 500
 
         if not os.access(UPLOAD_FOLDER, os.W_OK):
             return jsonify({'error': f'Upload folder {UPLOAD_FOLDER} is not writable'}), 500
 
-        filename = file.filename
-        name, ext = os.path.splitext(filename)
-        save_path = os.path.join(UPLOAD_FOLDER, filename)
+        # Получаем расширение файла
+        ext = os.path.splitext(file.filename)[1].lower()
 
-        # Уникализация имени файла, если файл с таким именем уже есть
-        counter = 1
-        while os.path.exists(save_path):
-            filename = f"{name}_{counter}{ext}"
-            save_path = os.path.join(UPLOAD_FOLDER, filename)
-            counter += 1
+        # Получаем следующее доступное имя файла
+        filename, save_path = get_next_filename(ext)
 
-        # Логируем права и путь перед сохранением
-        st = os.stat(UPLOAD_FOLDER)
-        print(f"Upload folder permissions: {oct(st.st_mode)[-3:]}, path: {UPLOAD_FOLDER}")
-
+        # Сохраняем файл
         file.save(save_path)
-        print(f"File saved to: {save_path}")
+        print(f"Файл сохранён: {save_path}")
 
-        # Проверяем файл после сохранения
         if not os.path.exists(save_path):
             return jsonify({'error': 'Failed to save file'}), 500
 

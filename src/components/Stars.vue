@@ -70,11 +70,11 @@ onMounted(() => {
   const earthGroup = new THREE.Group()
 
   const textureLoader = new THREE.TextureLoader()
-  const dayMap = textureLoader.load('8k_earth_daymap.jpg')
-  const nightMap = textureLoader.load('8k_earth_nightmap.jpg')
-  const normalMap = textureLoader.load('/8k_earth_normal_map.tif')
-  const specularMap = textureLoader.load('8k_earth_specular_map.tif')
-  const cloudMap = textureLoader.load('8k_earth_clouds.jpg')
+  const dayMap = textureLoader.load('textures/8k_earth_daymap.jpg')
+  const nightMap = textureLoader.load('textures/8k_earth_nightmap.jpg')
+  const normalMap = textureLoader.load('textures/8k_earth_normal_map.tif')
+  const specularMap = textureLoader.load('textures/8k_earth_specular_map.tif')
+  const cloudMap = textureLoader.load('textures/8k_earth_clouds.jpg')
 
   const earthGeometry = new THREE.SphereGeometry(7.5, 64, 64)
   const earthMaterial = new THREE.MeshStandardMaterial({
@@ -131,7 +131,7 @@ onMounted(() => {
 
   // СОЛНЦЕ
   const sunGroup = new THREE.Group()
-  textureLoader.load('8k_sun.jpg', (sunTexture) => {
+  textureLoader.load('textures/8k_sun.jpg', (sunTexture) => {
     const sunGeometry = new THREE.SphereGeometry(4, 64, 64)
     const sunMaterial = new THREE.MeshStandardMaterial({
       map: sunTexture,
