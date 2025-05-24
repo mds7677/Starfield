@@ -25,7 +25,7 @@ def allowed_file(filename):
 
 def extract_coordinates(image_path):
     # Заглушка: здесь должна быть твоя логика анализа изображения
-    return [(100, 200), (250, 300), (400, 100)]
+    return [(500, 200), (250, 300), (500, 400)]
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
