@@ -1,13 +1,8 @@
 <template>
   <Header />
   <Preloader />
-
-  <div class="stars-input-wrapper">
-    <MyStars />
-    <MyInput />
-  </div>
-
-  <div class="page-container">
+  <MyStars />
+  <div class="main-wrapper">
     <!-- Левая колонка -->
     <div class="floating-texts left">
       <transition-group name="fade-float" tag="div">
@@ -19,6 +14,11 @@
             @mouseleave="setRemovalTimer(item.id, 'left')"
         />
       </transition-group>
+    </div>
+
+    <!-- Центр -->
+    <div class="stars-input-wrapper">
+      <MyInput />
     </div>
 
     <!-- Правая колонка -->
@@ -34,6 +34,8 @@
       </transition-group>
     </div>
   </div>
+
+  <Footer />
 </template>
 
 <script setup>
@@ -43,6 +45,7 @@ import MyInput from './components/Input.vue';
 import MyText from './components/Text.vue';
 import Preloader from './components/Preloader.vue';
 import Header from './components/Header.vue';
+import Footer from './components/Footer.vue';
 
 const constellations = ref([]);
 const floatingLeft = ref([]);
@@ -116,38 +119,39 @@ body {
   padding: 0;
   overflow-x: hidden;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.stars-input-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding-top: 40px;
+  min-height: 100vh;
 }
 
-.stars-input-wrapper MyInput {
-  margin-top: -10px;
-}
-
-.page-container {
+.main-wrapper {
   display: flex;
-  justify-content: space-between;
-  padding: 80px 40px;
-  min-height: 40vh;
-  gap: 20px;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 80px; /* увеличиваем расстояние между колонками */
+  padding: 40px;
+  flex-grow: 1;
+}
+
+/* Левый блок — с отступом слева */
+.floating-texts.left {
+  margin-right: 110px; /* отступ от левого края */
+}
+
+/* Правый блок — с отступом справа */
+.floating-texts.right {
+  margin-left: 80px; /* отступ от правого края */
 }
 
 .floating-texts {
-  /* Убираем position: relative, чтобы элементы были в потоке */
   display: flex;
   flex-direction: column;
   gap: 20px;
   width: 300px;
   pointer-events: auto;
+  margin-top: 0 !important;
 }
 
-/* Стили для текстовых блоков */
 .floating-texts > * {
   color: white;
   padding: 15px 20px;
@@ -156,18 +160,22 @@ body {
   user-select: none;
   cursor: default;
   line-height: 1.4;
-  margin-top: -670px;
-  transition: background-color 0.3s ease;
-  /* фиксируем высоту, чтобы избежать прыжков */
   min-height: 60px;
-  /* Оптимизация для анимации transform */
+  transition: background-color 0.3s ease;
   will-change: transform;
 }
 
-.floating-texts > *:hover {
+.stars-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* Анимации для переходов */
+.stars-input-wrapper MyInput {
+  margin-top: 0 !important;
+}
+
+/* Анимации (оставил без изменений) */
 .fade-float-enter-active,
 .fade-float-leave-active {
   transition:
@@ -194,9 +202,16 @@ body {
   transform: translateX(40%) translateY(20px) scale(0.95);
 }
 
-/* Плавное смещение элементов при перестановке */
 .fade-float-move {
   transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+footer {
+  padding: 20px 40px;
+  background-color: #0a0f1c;
+  color: white;
+  text-align: center;
+}
+
 </style>
 

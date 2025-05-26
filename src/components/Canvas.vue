@@ -1,185 +1,217 @@
 <template>
   <div class="mainwindow">
     <div class="content-row">
-      <div ref="container" class="three-container" />
+      <div ref="container" class="three-container"></div>
       <div class="sidebar">
-        <img :src="`/illustrations/${image}`" class="constellation-icon" />
+        <img :src="`/illustrations/${image}`" class="constellation-icon"/>
         <h2 class="constellation-title">{{ name }}</h2>
         <div class="button-group">
-          <Button title="Следующее созвездие" />
+          <Button title="Следующее созвездие"/>
         </div>
       </div>
     </div>
     <div class="bottom-controls">
-      <Button title="Загрузить другое" @click="emitReload" />
+      <Button @click="emitReload">
+        <font-awesome-icon icon="file-arrow-down" />
+        Загрузить другое
+      </Button>
       <Button title="Сменить тему" />
-      <Button title="Скачать" @click="downloadImage" />
+      <Button @click="downloadImage">
+        <font-awesome-icon icon="download" />
+        Скачать изображение
+      </Button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, watch, nextTick } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import * as THREE from 'three';
 import Button from './MenuButton.vue';
 
 const props = defineProps({
   imageSrc: String,
-  points: Array, // [[[x, y], [x, y]], ...]
+  points: Array,
   image: String,
-  name: String,
+  name: [String, Array],
 });
-
 const emit = defineEmits(['reload']);
-const emitReload = () => emit('reload');
-
 const container = ref(null);
+
 let scene, camera, renderer, imageMesh;
 let lines = [];
+let animationId = null;
 
-const initThree = (width, height) => {
-  scene = new THREE.Scene();
+function emitReload() {
+  emit('reload');
+}
 
-  camera = new THREE.OrthographicCamera(0, width, height, 0, 0.1, 1000);
-  camera.position.z = 10;
+function downloadImage() {
+  if (!renderer || !scene || !camera) return;
 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(width, height);
-  renderer.setClearColor(0x000000, 1);
+  // Отрисовываем последний кадр (важно, если анимация была)
+  renderer.render(scene, camera);
 
-  container.value.innerHTML = '';
-  container.value.appendChild(renderer.domElement);
-};
+  const link = document.createElement('a');
+  link.download = 'constellation.png';
+  link.href = renderer.domElement.toDataURL('image/png');
+  link.click();
+}
 
-const clearScene = () => {
+
+function clearScene() {
   if (imageMesh) {
     scene.remove(imageMesh);
     imageMesh.geometry.dispose();
     imageMesh.material.dispose();
     imageMesh = null;
   }
-
-  lines.forEach(line => {
+  lines.forEach(({ line }) => {
     scene.remove(line);
     line.geometry.dispose();
     line.material.dispose();
   });
   lines = [];
-};
+}
 
-const drawLines = (scaleX, scaleY, imageHeight) => {
+function initThree(width, height) {
+  scene = new THREE.Scene();
+  camera = new THREE.OrthographicCamera(0, width, height, 0, 0.1, 1000);
+  camera.position.z = 10;
+
+  if (renderer) {
+    renderer.dispose();
+    if (renderer.domElement.parentNode) {
+      renderer.domElement.parentNode.removeChild(renderer.domElement);
+    }
+  }
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setSize(width, height);
+  renderer.setClearColor(0x000000, 1);
+
+  if (container.value) {
+    container.value.innerHTML = '';
+    container.value.appendChild(renderer.domElement);
+  }
+}
+
+function convertPoint(x, y, imgHeight, scaleFactor) {
+  return new THREE.Vector3(x * scaleFactor, (imgHeight - y) * scaleFactor, 1);
+}
+
+function createLineGeometry(start, end, progress) {
+  const currentPoint = start.clone().lerp(end, progress);
+  return new THREE.BufferGeometry().setFromPoints([start, currentPoint]);
+}
+
+function setupLines(imgWidth, imgHeight, scaleFactor) {
   if (!props.points || !Array.isArray(props.points)) return;
+  lines = [];
 
-  const material = new THREE.LineBasicMaterial({ color: '#ffffff', linewidth: 2 });
+  const material = new THREE.LineBasicMaterial({ color: 0xffffff });
 
   props.points.forEach(pair => {
-    if (pair.length === 2) {
-      const [start, end] = pair;
-      const x1 = start.x * scaleX;
-      const y1 = imageHeight - start.y * scaleY;
-      const x2 = end.x * scaleX;
-      const y2 = imageHeight - end.y * scaleY;
-
-      const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(x1, y1, 1),
-        new THREE.Vector3(x2, y2, 1),
-      ]);
+    if (Array.isArray(pair) && pair.length === 2) {
+      const start = convertPoint(pair[0][0], pair[0][1], imgHeight, scaleFactor);
+      const end = convertPoint(pair[1][0], pair[1][1], imgHeight, scaleFactor);
+      const geometry = createLineGeometry(start, end, 0);
       const line = new THREE.Line(geometry, material);
       scene.add(line);
-      lines.push(line);
+      lines.push({ line, start, end, progress: 0 });
     }
   });
-};
+}
 
-const loadAndDisplayImage = async () => {
+function animate() {
+  animationId = requestAnimationFrame(animate);
+  const speed = 0.005;
+  let allDone = true;
+
+  lines.forEach(item => {
+    if (item.progress < 1) {
+      item.progress += speed;
+      if (item.progress > 1) item.progress = 1;
+      const newGeometry = createLineGeometry(item.start, item.end, item.progress);
+      item.line.geometry.dispose();
+      item.line.geometry = newGeometry;
+      allDone = false;
+    }
+  });
+
+  renderer.render(scene, camera);
+  if (allDone) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+}
+
+async function loadAndDisplayImage() {
   await nextTick();
+  if (!container.value || !props.imageSrc) return;
 
-  // Получаем ширину контейнера для вписывания изображения по ширине
-  const containerWidth = container.value.clientWidth;
-  const containerHeight = container.value.clientHeight; // высота контейнера (можно использовать для ограничений)
+  clearScene();
 
   const loader = new THREE.TextureLoader();
-  loader.load(props.imageSrc, texture => {
-    clearScene();
-
+  loader.load(props.imageSrc, (texture) => {
     const img = texture.image;
-    const imgWidth = img.width;
-    const imgHeight = img.height;
+    const originalWidth = img.width;
+    const originalHeight = img.height;
 
-    // Ограничиваем максимальную ширину рендера (например 1000)
-    let renderWidth = imgWidth;
-    let renderHeight = imgHeight;
+    const containerWidth = container.value.clientWidth;
+    const containerHeight = container.value.clientHeight;
 
-    if (renderWidth > 1000) {
-      const scaleFactor = 1000 / renderWidth;
-      renderWidth = 1000;
-      renderHeight = renderHeight * scaleFactor;
-    }
+    const scaleFactor = Math.min(containerWidth / originalWidth, containerHeight / originalHeight);
 
-    // Инициализируем сцену с размерами исходного изображения (ограниченного по ширине)
-    initThree(renderWidth, renderHeight);
+    const scaledWidth = originalWidth * scaleFactor;
+    const scaledHeight = originalHeight * scaleFactor;
 
-    // Масштаб для отрисовки так, чтобы картинка вписалась во всю ширину контейнера
-    const scaleX = containerWidth / imgWidth;
-    const scaleY = scaleX; // чтобы сохранить пропорции при масштабировании по ширине
+    initThree(scaledWidth, scaledHeight);
+    camera.updateProjectionMatrix();
 
-    // Создаем геометрию и материал для плоскости изображения
-    const geometry = new THREE.PlaneGeometry(renderWidth, renderHeight);
+    const geometry = new THREE.PlaneGeometry(scaledWidth, scaledHeight);
     const material = new THREE.MeshBasicMaterial({ map: texture });
 
     imageMesh = new THREE.Mesh(geometry, material);
-    // Центрируем изображение
-    imageMesh.position.set(renderWidth / 2, renderHeight / 2, 0);
+    imageMesh.position.set(scaledWidth / 2, scaledHeight / 2, 0);
     scene.add(imageMesh);
 
-    // Рисуем линии с учетом масштаба (чтобы линии совпадали с масштабированным изображением)
-    drawLines(scaleX, scaleY, renderHeight);
+    setupLines(originalWidth, originalHeight, scaleFactor);
 
+    if (animationId) cancelAnimationFrame(animationId);
     animate();
   });
-};
+}
 
-
-const animate = () => {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-};
-
-const downloadImage = () => {
-  renderer.render(scene, camera);
-  const dataURL = renderer.domElement.toDataURL('image/png');
-
-  const link = document.createElement('a');
-  link.href = dataURL;
-  link.download = `${props.name || 'constellation'}.png`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
-
-watch(() => props.imageSrc, () => {
-  if (props.imageSrc) {
-    loadAndDisplayImage();
-  }
-});
+watch(() => props.imageSrc, loadAndDisplayImage, { immediate: true });
+watch(() => props.points, loadAndDisplayImage, { immediate: true });
 
 onMounted(() => {
-  if (props.imageSrc) {
-    loadAndDisplayImage();
+  if (props.imageSrc) loadAndDisplayImage();
+});
+
+onBeforeUnmount(() => {
+  clearScene();
+  if (animationId) cancelAnimationFrame(animationId);
+  if (renderer) {
+    renderer.dispose();
+    if (renderer.domElement?.parentNode) {
+      renderer.domElement.parentNode.removeChild(renderer.domElement);
+    }
   }
 });
 </script>
 
 <style scoped>
 .mainwindow {
-  max-width: 1000px;
-  margin: 80px 20px 0 20px;
+  max-width: 1400px;
+  margin: 60px auto;
+  padding: 30px;
   background: #050911;
   border-radius: 24px;
-  padding: 30px;
+  border: 2px solid #131924;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
-  border: 2px solid #131924;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -189,10 +221,14 @@ onMounted(() => {
   display: flex;
   flex-direction: row;
   gap: 40px;
+  height: 700px;
 }
 
 .three-container {
   flex: 3;
+  min-width: 0;
+  height: 100%;
+  max-width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -200,7 +236,7 @@ onMounted(() => {
   border-radius: 12px;
   border: 2px solid #131924;
   overflow: hidden;
-  padding: 10px;
+  position: relative;
 }
 
 .sidebar {
@@ -216,13 +252,14 @@ onMounted(() => {
 
 .constellation-icon {
   max-width: 220px;
+  height: auto;
   margin-bottom: 20px;
-  height: 350px;
 }
 
 .constellation-title {
   font-size: 24px;
   font-weight: bold;
+  text-align: center;
   margin-top: 20px;
 }
 
@@ -231,11 +268,13 @@ onMounted(() => {
   flex-direction: column;
   gap: 10px;
   width: 100%;
+  margin-top: auto;
 }
 
 .bottom-controls {
   display: flex;
   justify-content: space-between;
-  padding: 20px 0;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 </style>

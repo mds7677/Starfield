@@ -1,34 +1,18 @@
 <template>
   <div class="container">
     <label class="upload-label" for="fileInput" v-if="visible">
-      <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="icon-upload"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-      >
-        <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0l-4 4m4-4l4 4"
-        />
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon-upload" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0l-4 4m4-4l4 4" />
       </svg>
       <span class="label-title">Загрузите изображение неба</span>
       <span class="label-subtitle">Мы определим созвездия на вашем небе</span>
-      <input
-          type="file"
-          id="fileInput"
-          class="hidden"
-          @change="handleFileChange"
-      />
+      <input type="file" id="fileInput" class="hidden" @change="handleFileChange" />
     </label>
 
     <MyCanvas
         v-if="showCanvas"
         :imageSrc="imageSrc"
-        :points="points"
+        :points="vectorLines"
         :image="constellationImage"
         :name="constellationName"
         @reload="handleReload"
@@ -47,8 +31,8 @@ export default {
       imageSrc: null,
       visible: true,
       constellationImage: null,
-      constellationName: null,
-      points: [],
+      constellationName: '',
+      vectorLines: [], // [[[x1, y1], [x2, y2]], ...]
     };
   },
   methods: {
@@ -58,12 +42,6 @@ export default {
 
       this.showCanvas = true;
       this.visible = false;
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.imageSrc = reader.result;
-      };
-      reader.readAsDataURL(file);
 
       const formData = new FormData();
       formData.append('file', file);
@@ -81,22 +59,26 @@ export default {
         }
 
         const data = await res.json();
-        this.constellationImage = data.filename || null;
-        this.constellationName = data.coordinates[0] || null;
 
-        const linePairs = data.coordinates[1] || [];
-        this.points = linePairs.flat().map(([x, y]) => ({ x, y }));
+        this.constellationImage = data.filename || '';
+        this.constellationName = data.matched_name || 'Созвездие';
+        this.vectorLines = data.lines || [];
+
+        // Важно: установить URL для загрузки изображения с сервера
+        this.imageSrc = `/uploads/${data.filename}`;
 
       } catch (e) {
         console.error('Ошибка загрузки:', e);
       }
     },
+
     handleReload() {
       this.showCanvas = false;
       this.visible = true;
       this.imageSrc = null;
       this.constellationImage = null;
-      this.constellationName = null;
+      this.constellationName = '';
+      this.vectorLines = [];
     },
   },
 };

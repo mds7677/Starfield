@@ -4,7 +4,7 @@ defineProps(['title'])
 
 <template>
   <button class="custom-button">
-    {{ title }}
+    <slot>{{ title }}</slot>
   </button>
 </template>
 
@@ -19,7 +19,7 @@ defineProps(['title'])
   border: 1.5px solid #050911;
   color: #ffffff;
   font-family: 'Orbitron', sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   transition: background-color 0.3s, border-color 0.3s, transform 0.2s;
   cursor: pointer;
