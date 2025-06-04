@@ -149,7 +149,18 @@ onMounted(() => {
     sunGroup.add(sun)
     scene.add(sunGroup)
   })
+  const fufelGroup = new THREE.Group();
+  textureLoader.load('textures/Fufel.jpeg', (sunTexture) => {
+    const sunGeometry = new THREE.BoxGeometry(8, 20, 20)
+    const sunMaterial = new THREE.MeshStandardMaterial({
+      map: sunTexture,
+    })
 
+    const fufel = new THREE.Mesh(sunGeometry, sunMaterial)
+    fufel.position.set(0, 20, -100)
+    fufelGroup.add(fufel)
+    scene.add(fufelGroup);
+  })
   // ОБЩИЙ СВЕТ
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.5)
   scene.add(ambientLight)
@@ -163,6 +174,9 @@ onMounted(() => {
     clouds.rotation.y += 0.0012
     nightLayer.rotation.y += 0.001
     sunGroup.rotation.y += 0.0008
+    fufelGroup.rotation.z += 0.0040
+    fufelGroup.rotation.y += 0.001
+    fufelGroup.rotation.x += 0.003
     bloomComposer.render()
   }
 

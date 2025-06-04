@@ -1,6 +1,7 @@
 from sklearn.neighbors import KDTree 
 from itertools import combinations
 from collections import Counter
+from data.constellation import constellation_names
 import pandas as pd
 import numpy as np
 import cv2
@@ -147,10 +148,8 @@ def match(import_path: str) -> tuple[str, list[list]]:
     df = pd.DataFrame(dots, columns=["x", "y"])
     matches = match_stars_to_catalogue(df, metrics, tree)
 
-    name, output_list = find_lines(matches, lines, dots)
-    img = cv2.imread(import_path)
-    # draw_lines(output_list, export_path, img) # uncomment to draw lines on image
-    return name, output_list
-
+    short_name, output_list = find_lines(matches, lines, dots)
+    full_name = constellation_names.get(short_name, short_name)
+    return full_name, output_list
 
 # match('examples/inputs/image1.png', 'example.jpg')

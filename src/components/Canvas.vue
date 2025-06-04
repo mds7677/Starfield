@@ -3,7 +3,7 @@
     <div class="content-row">
       <div ref="container" class="three-container"></div>
       <div class="sidebar">
-        <img :src="`/illustrations/${image}`" class="constellation-icon"/>
+        <img :src="`/illustrations/${name}.png`" class="constellation-icon"/>
         <h2 class="constellation-title">{{ name }}</h2>
         <div class="button-group">
           <Button title="Следующее созвездие"/>
