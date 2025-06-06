@@ -45,9 +45,10 @@ def upload_file():
         print(f"Файл сохранён: {save_path}")
 
         # Вызов функции match на сохранённом изображении
-        # НУ СДЕЛАЛ
+
+        # ДОБАВИЛ ЛОГИ В str_log!!!!!!!!!!!!!
         try:
-            name, lines, log_lines = match(save_path)
+            name, lines, str_log = match(save_path)
             print(f"Обработка завершена: {name}, линии: {lines}")
         except Exception as e:
             traceback.print_exc()
@@ -70,7 +71,7 @@ def download_file(filename):
         return send_from_directory(UPLOAD_FOLDER, filename)
     except Exception as e:
         traceback.print_exc()
-        return jsonify({'error': 'File not found'}), 404
+        return jsonify({'error': 'File not found error'}), 404
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
