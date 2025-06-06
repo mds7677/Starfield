@@ -45,8 +45,9 @@ def upload_file():
         print(f"Файл сохранён: {save_path}")
 
         # Вызов функции match на сохранённом изображении
+        # НУ СДЕЛАЛ
         try:
-            name, lines = match(save_path)
+            name, lines, log_lines = match(save_path)
             print(f"Обработка завершена: {name}, линии: {lines}")
         except Exception as e:
             traceback.print_exc()
