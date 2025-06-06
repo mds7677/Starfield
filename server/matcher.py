@@ -7,6 +7,8 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 import cv2
+from data.constellation import constellation_names
+from constellation_lines import lines
 
 metrics = pd.read_csv('data/triangles.csv')
 tree = KDTree(metrics[['angle1', 'angle2', 'angle3']])
@@ -56,7 +58,7 @@ def find_stars(path: str) -> tuple[list[tuple[float, float]], str]:
                 cv2.rectangle(img_with_stars, (x-7, y-7), (x+7, y+7), (0, 0, 255), 1)
                 cv2.putText(img_with_stars, f"{ind}", (x + 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX,0.5,(0, 0, 255), 2)
 
-    star_image_path = f'image_logs/detected_{path.split("/")[-1]}'
+    star_image_path = f'examples/logs/detected_{path.split("/")[-1]}'
     cv2.imwrite(star_image_path, img_with_stars)
     log_str += format_log_message(f"Detected {len(star_coords)} stars in {path}. Saved marked stars image to {star_image_path}")
 
@@ -169,11 +171,17 @@ def match_stars_to_catalogue(df: pd.DataFrame, metrics: pd.DataFrame, tree: KDTr
     return matches, log_str
 
 
-def match(import_path: str) -> tuple[str, list[list]]:
-    dots = find_stars(import_path)
+def match(import_path: str) -> tuple[str, list[list], str]:
+    log_str = ""
+    dots, log_img_processing = find_stars(import_path)
+    log_str += log_img_processing
     df = pd.DataFrame(dots, columns=["x", "y"])
-    matches = match_stars_to_catalogue(df, metrics, tree)
+    matches, log_matching = match_stars_to_catalogue(df, metrics, tree)
+    log_str += log_matching
 
-    short_name, output_list, str_log = find_lines(matches, lines, dots)
+    short_name, output_list, log_lines = find_lines(matches, lines, dots)
+    log_str += log_lines
     full_name = constellation_names.get(short_name, short_name)
-    return full_name, output_list, str_log
+    return full_name, output_list, log_str
+
+# match('examples/inputs/image1.png', 'example.jpg')

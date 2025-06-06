@@ -45,6 +45,7 @@ def upload_file():
         print(f"Файл сохранён: {save_path}")
 
         # Вызов функции match на сохранённом изображении
+
         # ДОБАВИЛ ЛОГИ В str_log!!!!!!!!!!!!!
         try:
             name, lines, str_log = match(save_path)
